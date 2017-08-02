@@ -77,10 +77,10 @@ EOM
   esac
 }
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_resource "AMap3DMap-NO-IDFA/MAMapKit.framework/AMap.bundle"
+  install_resource "AMap2DMap-NO-IDFA/MAMapKit.framework/AMap.bundle"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_resource "AMap3DMap-NO-IDFA/MAMapKit.framework/AMap.bundle"
+  install_resource "AMap2DMap-NO-IDFA/MAMapKit.framework/AMap.bundle"
 fi
 
 mkdir -p "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"

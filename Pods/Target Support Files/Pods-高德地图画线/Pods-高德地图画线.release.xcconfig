@@ -1,9 +1,9 @@
 ARCHS = $(ARCHS_STANDARD)
-FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/AMap3DMap-NO-IDFA" "${PODS_ROOT}/AMapFoundation-NO-IDFA" "${PODS_ROOT}/AMapLocation-NO-IDFA"
+FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/AMap2DMap-NO-IDFA" "${PODS_ROOT}/AMapFoundation-NO-IDFA" "${PODS_ROOT}/AMapLocation-NO-IDFA"
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
-HEADER_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/AMap3DMap-NO-IDFA" "${PODS_ROOT}/Headers/Public/AMapFoundation-NO-IDFA" "${PODS_ROOT}/Headers/Public/AMapLocation-NO-IDFA"
-OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/AMap3DMap-NO-IDFA" -isystem "${PODS_ROOT}/Headers/Public/AMapFoundation-NO-IDFA" -isystem "${PODS_ROOT}/Headers/Public/AMapLocation-NO-IDFA"
-OTHER_LDFLAGS = $(inherited) -ObjC -l"c++" -l"stdc++.6.0.9" -l"z" -framework "AMapFoundationKit" -framework "AMapLocationKit" -framework "CoreGraphics" -framework "CoreLocation" -framework "CoreTelephony" -framework "CoreText" -framework "GLKit" -framework "JavaScriptCore" -framework "MAMapKit" -framework "OpenGLES" -framework "QuartzCore" -framework "Security" -framework "SystemConfiguration"
+HEADER_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/AMap2DMap-NO-IDFA" "${PODS_ROOT}/Headers/Public/AMapFoundation-NO-IDFA" "${PODS_ROOT}/Headers/Public/AMapLocation-NO-IDFA"
+OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/AMap2DMap-NO-IDFA" -isystem "${PODS_ROOT}/Headers/Public/AMapFoundation-NO-IDFA" -isystem "${PODS_ROOT}/Headers/Public/AMapLocation-NO-IDFA"
+OTHER_LDFLAGS = $(inherited) -ObjC -l"c++" -l"stdc++.6.0.9" -l"z" -framework "AMapFoundationKit" -framework "AMapLocationKit" -framework "CoreLocation" -framework "CoreTelephony" -framework "JavaScriptCore" -framework "MAMapKit" -framework "QuartzCore" -framework "Security" -framework "SystemConfiguration"
 PODS_BUILD_DIR = $BUILD_DIR
 PODS_CONFIGURATION_BUILD_DIR = $PODS_BUILD_DIR/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)
 PODS_ROOT = ${SRCROOT}/Pods
