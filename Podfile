@@ -9,6 +9,7 @@ pod 'AMapLocation-NO-IDFA'
 pod 'AMap2DMap-NO-IDFA'
 #pod 'AMapSearch-NO-IDFA'
 #pod 'AMapNavi-NO-IDFA'
+pod 'AMapSearch-NO-IDFA'
 
 #高德地图
 

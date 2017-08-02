@@ -11,8 +11,18 @@
 #import "UserLocation.h"
 #import <MAMapKit/MAPolylineRenderer.h>
 #import <AMapLocationKit/AMapLocationKit.h>
+#import <AMapSearchKit/AMapSearchKit.h>
+#import "SearchPointAnnotation.h"
+#import "SearchAnnotationView.h"
 
-@interface ViewController ()<MAMapViewDelegate,AMapGeoFenceManagerDelegate>
+
+#import "AnimatedAnnotation.h"
+#import "AnimatedAnnotationView.h"
+
+
+#define  WeakSelf(name,className)  __weak typeof(className)name=className;
+
+@interface ViewController ()<MAMapViewDelegate,AMapGeoFenceManagerDelegate,AMapSearchDelegate>
 {
     /**获取经纬度数组*/
     CLLocationCoordinate2D * _coors;
@@ -23,20 +33,90 @@
 @property(nonatomic,strong)NSMutableArray *pointArr;
 @property(nonatomic,strong)MAMapView *mapView;
 @property (nonatomic, strong) MAPolyline *routeLine;
+@property (nonatomic, strong) NSMutableArray *tips;
+@property (nonatomic, strong) AMapSearchAPI *search;
+@property (nonatomic, strong) SearchPointAnnotation *searchAnnotation;
+
+@property (nonatomic, strong) AnimatedAnnotation *animatedCarAnnotation;
+@property (nonatomic, strong) AnimatedAnnotation *animatedTrainAnnotation;
 
 @end
 
 @implementation ViewController
 
+
+
+@synthesize animatedCarAnnotation = _animatedCarAnnotation;
+@synthesize animatedTrainAnnotation = _animatedTrainAnnotation;
+@synthesize searchAnnotation = _searchAnnotation;
+
+
+
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.pointArr = [NSMutableArray array];//存储轨迹的数组.
+    self.tips=@[].mutableCopy;
+    
     [self setMapView];
 
     [self addGeoFencePolygonRegion];
     
+    
+    self.search = [[AMapSearchAPI alloc] init];
+    self.search.delegate = self;
+  
+    [self searchTipsWithKey:@"798"];
+    
+    
+    
+    [self addCarAnnotationWithCoordinate:CLLocationCoordinate2DMake(39.948691, 116.492479)];
+    [self addTrainAnnotationWithCoordinate:CLLocationCoordinate2DMake(39.843349, 116.315633)];
+
+
     // Do any additional setup after loading the view, typically from a nib.
 }
+
+
+
+
+#pragma mark - Utility
+
+-(void)addCarAnnotationWithCoordinate:(CLLocationCoordinate2D)coordinate
+{
+    NSMutableArray *carImages = [[NSMutableArray alloc] init];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_1.png"]];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_2.png"]];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_3.png"]];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_4.png"]];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_3.png"]];
+    [carImages addObject:[UIImage imageNamed:@"animatedCar_4.png"]];
+    
+    self.animatedCarAnnotation = [[AnimatedAnnotation alloc] initWithCoordinate:coordinate];
+    self.animatedCarAnnotation.animatedImages   = carImages;
+    self.animatedCarAnnotation.title            = @"AutoNavi";
+    self.animatedCarAnnotation.subtitle         = [NSString stringWithFormat:@"Car: %lu images",(unsigned long)[self.animatedCarAnnotation.animatedImages count]];
+    
+    [self.mapView addAnnotation:self.animatedCarAnnotation];
+}
+
+-(void)addTrainAnnotationWithCoordinate:(CLLocationCoordinate2D)coordinate
+{
+    NSMutableArray *trainImages = [[NSMutableArray alloc] init];
+    [trainImages addObject:[UIImage imageNamed:@"animatedTrain_1.png"]];
+    [trainImages addObject:[UIImage imageNamed:@"animatedTrain_2.png"]];
+    [trainImages addObject:[UIImage imageNamed:@"animatedTrain_3.png"]];
+    [trainImages addObject:[UIImage imageNamed:@"animatedTrain_4.png"]];
+    
+    self.animatedTrainAnnotation = [[AnimatedAnnotation alloc] initWithCoordinate:coordinate];
+    self.animatedTrainAnnotation.animatedImages = trainImages;
+    self.animatedTrainAnnotation.title          = @"AutoNavi";
+    self.animatedTrainAnnotation.subtitle       = [NSString stringWithFormat:@"Train: %lu images",(unsigned long)[self.animatedTrainAnnotation.animatedImages count]];
+    
+    [self.mapView addAnnotation:self.animatedTrainAnnotation];
+//    [self.mapView selectAnnotation:self.animatedTrainAnnotation animated:YES];
+}
+
 
 - (void)setMapView {
     
@@ -64,21 +144,89 @@
     //开启定位
     _mapView.showsUserLocation = YES;
     //缩放等级
-    [_mapView setZoomLevel:18 animated:YES];
+    [_mapView setZoomLevel:14 animated:YES];
     
 //    //防止系统自动杀掉定位 -- 后台定位
 //    _mapView.pausesLocationUpdatesAutomatically = NO;
 //    _mapView.allowsBackgroundLocationUpdates = YES;
     [self.view addSubview:self.mapView];
     
-    [self configGeoFenceManager];
+  
 
-    
+    //电子围栏  画线
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self drawLine];
-
+//        [self configGeoFenceManager];
+//        [self drawLine];
     });
 }
+
+/* 输入提示 搜索.*/
+- (void)searchTipsWithKey:(NSString *)key
+{
+    if (key.length == 0)
+    {
+        return;
+    }
+    
+    AMapInputTipsSearchRequest *tips = [[AMapInputTipsSearchRequest alloc] init];
+    tips.keywords = key;
+    tips.city = @"北京";
+    //    tips.cityLimit = YES; 是否限制城市
+    
+    [self.search AMapInputTipsSearch:tips];
+}
+#pragma mark - AMapSearchDelegate
+- (void)AMapSearchRequest:(id)request didFailWithError:(NSError *)error
+{
+    
+    NSLog(@"请求失败%@",error);
+}
+
+/* 输入提示回调. *//*  搜索结果.*/
+
+- (void)onInputTipsSearchDone:(AMapInputTipsSearchRequest *)request response:(AMapInputTipsSearchResponse *)response
+{
+    if (response.count == 0)
+    {
+        
+        return;
+    }
+    
+
+    
+    
+    [self.tips setArray:response.tips];
+    
+    
+   
+    [self.tips enumerateObjectsUsingBlock:^( AMapTip *tip, NSUInteger idx, BOOL * _Nonnull stop) {
+//        AMapTip *tip=self.tips[idx];
+        
+ 
+
+        
+        
+        self.searchAnnotation = [[SearchPointAnnotation alloc] initWithCoordinate:CLLocationCoordinate2DMake(tip.location
+                                                                                                               .latitude, tip.location.longitude)];
+        
+        self.searchAnnotation.title = tip.name;
+        
+        self.searchAnnotation.subtitle = tip.address;
+        self.searchAnnotation.index=idx+1;
+        [self.mapView addAnnotation: self.searchAnnotation];
+        
+
+        if (idx==1) {
+            [self.mapView selectAnnotation: self.searchAnnotation animated:YES];
+            
+        }
+        
+        
+    }];
+    
+}
+
+
 
 
 //初始化地理围栏manager
@@ -170,6 +318,64 @@
     }
     
 }
+
+//添加大头针
+- (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id <MAAnnotation>)annotation {
+  
+    
+    if ([annotation isMemberOfClass:[MAPointAnnotation class]]) {
+        static NSString *pointReuseIndentifier = @"pointReuseIndentifier";
+        MAPinAnnotationView*annotationView = (MAPinAnnotationView*)[mapView dequeueReusableAnnotationViewWithIdentifier:pointReuseIndentifier];
+        if (annotationView == nil) {
+            annotationView = [[MAPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:pointReuseIndentifier];
+        }
+        annotationView.canShowCallout= YES;       //设置气泡可以弹出，默认为NO
+        annotationView.animatesDrop = YES;        //设置标注动画显示，默认为NO
+        annotationView.draggable = YES;        //设置标注可以拖动，默认为NO
+        annotationView.pinColor = MAPinAnnotationColorRed;
+        return annotationView;
+    }
+   
+    else if ([annotation isMemberOfClass:[SearchPointAnnotation class]])
+    {
+        static NSString *annotationIdentifier = @"searchPointAnnotationIdentifiersss";
+        
+        SearchAnnotationView *pointAnnotationView = (SearchAnnotationView*)[mapView dequeueReusableAnnotationViewWithIdentifier:annotationIdentifier];
+        if (pointAnnotationView == nil)
+        {
+            pointAnnotationView = [[SearchAnnotationView alloc] initWithAnnotation:annotation
+                                                                   reuseIdentifier:annotationIdentifier];
+            pointAnnotationView.canShowCallout = YES;
+            pointAnnotationView.draggable      = YES;
+            
+
+        }
+        
+              return pointAnnotationView;
+        
+    }
+    if ([annotation isMemberOfClass:[AnimatedAnnotation class]])
+    {
+        static NSString *animatedAnnotationIdentifier = @"AnimatedAnnotationIdentifier";
+        
+        AnimatedAnnotationView *annotationView = (AnimatedAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:animatedAnnotationIdentifier];
+        
+        if (annotationView == nil)
+        {
+            annotationView = [[AnimatedAnnotationView alloc] initWithAnnotation:annotation
+                                                                reuseIdentifier:animatedAnnotationIdentifier];
+            
+            annotationView.canShowCallout   = YES;
+            annotationView.draggable        = YES;
+        }
+        
+        return annotationView;
+    }
+
+    
+    return nil;
+}
+
 
 
 
